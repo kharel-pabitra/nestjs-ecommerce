@@ -4,12 +4,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../user/user.entity';
 import { Repository } from 'typeorm';
 import { LoginUserDto } from './dto/login-user.dto';
+import { JwtUserDto } from './dto/jwt-user.dto';
 import { JwtService } from '@nestjs/jwt';
-
-type JwtPayload = {
-  sub: number;
-  email: string;
-};
 
 @Injectable()
 export class AuthService {
@@ -38,7 +34,11 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const payload = { sub: user.id, email: user.email };
+    const payload = {
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+    };
 
     const accessToken = this.jwtService.sign(payload, {
       expiresIn: '15m',
@@ -56,10 +56,10 @@ export class AuthService {
 
   refreshToken(token: string) {
     try {
-      const payload = this.jwtService.verify<JwtPayload>(token);
+      const payload = this.jwtService.verify<JwtUserDto>(token);
 
       const newAccessToken = this.jwtService.sign(
-        { sub: payload.sub, email: payload.email },
+        { userId: payload.userId, email: payload.email, role: payload.role },
         { expiresIn: '15m' },
       );
 

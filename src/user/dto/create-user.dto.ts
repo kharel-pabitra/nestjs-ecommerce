@@ -5,7 +5,10 @@ import {
   IsString,
   MaxLength,
   MinLength,
+  IsEnum,
+  IsOptional,
 } from 'class-validator';
+import { UserRole } from 'src/common/enums/user-role.enum';
 
 export class CreateUserDto {
   @IsNotEmpty({ message: 'Name should not be empty' })
@@ -25,4 +28,10 @@ export class CreateUserDto {
   @IsNotEmpty({ message: 'Password must not be empty' })
   @Length(6)
   password: string;
+
+  @IsOptional()
+  @IsEnum([UserRole.CUSTOMER, UserRole.SELLER], {
+    message: 'Role must be customer or seller',
+  })
+  role?: UserRole.CUSTOMER | UserRole.SELLER;
 }

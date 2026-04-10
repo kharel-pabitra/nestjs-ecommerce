@@ -1,33 +1,24 @@
 import {
   Entity,
-  Column,
   PrimaryGeneratedColumn,
+  Column,
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
-import { UserRole } from 'src/common/enums/user-role.enum';
-
 @Entity()
-export class User {
+export class Product {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column({ length: 500 })
   name: string;
 
-  @Column({ unique: true })
-  email: string;
+  @Column()
+  price: number;
 
-  @Column({ select: false })
-  password: string;
-
-  @Column({
-    type: 'enum',
-    enum: UserRole,
-    default: UserRole.CUSTOMER,
-  })
-  role: UserRole;
+  @Column()
+  unitsInStock: number;
 
   @CreateDateColumn()
   createdAt: Date;

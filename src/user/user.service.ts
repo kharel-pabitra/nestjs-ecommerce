@@ -13,7 +13,7 @@ export class UserService {
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
-    const { email, password, name } = createUserDto;
+    const { email, password, name, role } = createUserDto;
 
     const existingUser = await this.userRepository.findOne({
       where: { email },
@@ -28,6 +28,7 @@ export class UserService {
     const user = this.userRepository.create({
       name,
       email,
+      role,
       password: hashedPassword,
     });
 

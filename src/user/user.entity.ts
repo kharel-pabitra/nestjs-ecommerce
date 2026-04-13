@@ -4,9 +4,11 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
 
 import { UserRole } from 'src/common/enums/user-role.enum';
+import { Order } from 'src/order/order.entity';
 
 @Entity()
 export class User {
@@ -28,6 +30,9 @@ export class User {
     default: UserRole.CUSTOMER,
   })
   role: UserRole;
+
+  @OneToMany(() => Order, (order) => order.user)
+  order: Order;
 
   @CreateDateColumn()
   createdAt: Date;

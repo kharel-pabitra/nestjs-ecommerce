@@ -7,6 +7,7 @@ import {
   Column,
 } from 'typeorm';
 import { OrderItem } from './orderItem.entity';
+import { OrderStatus } from './enums/order-status.enum';
 
 @Entity()
 export class Order {
@@ -18,6 +19,9 @@ export class Order {
 
   @OneToMany(() => OrderItem, (item) => item.order)
   items: OrderItem[];
+
+  @Column({ type: 'enum', enum: OrderStatus, default: OrderStatus.PENDING })
+  status: OrderStatus;
 
   @Column('decimal')
   totalPrice: number;

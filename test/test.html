@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Stripe Test</title>
+    <script src="https://js.stripe.com/v3/"></script>
+  </head>
+  <body>
+    <button id="pay">Pay Now</button>
+
+    <script>
+      const stripe = Stripe(
+        'pk_test_51TJrS8AC921ibt80QtqOsEmxXgBDbLg4kKexlbIMGJD6cYW9KN6tIUOjusdoFQzR0dM6AgclqXtFeLTQQoWGdPgM0067tHyVDs',
+      );
+
+      document.getElementById('pay').addEventListener('click', async () => {
+        const res = await fetch(
+          'http://localhost:3000/stripe/create-payment-intent',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              orderId: '123',
+              amount: 50,
+            }),
+          },
+        );
+
+        const data = await res.json();
+
+        const result = await stripe.confirmPayment({
+          clientSecret: data.clientSecret,
+          confirmParams: {
+            return_url: 'http://localhost:3000/success.html',
+          },
+        });
+
+        console.log(result);
+      });
+    </script>
+  </body>
+</html>

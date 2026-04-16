@@ -17,12 +17,6 @@ export class OrderService {
     @InjectRepository(Order)
     private readonly orderRepository: Repository<Order>,
 
-    @InjectRepository(Product)
-    private readonly productRepository: Repository<Product>,
-
-    @InjectRepository(OrderItem)
-    private readonly orderItemRepository: Repository<OrderItem>,
-
     private readonly dataSource: DataSource,
   ) {}
 
@@ -135,11 +129,7 @@ export class OrderService {
 
       // 🧑‍💼 SELLER RULES
       if (user.role === 'SELLER') {
-        const allowedStatuses = [
-          OrderStatus.CONFIRMED,
-          OrderStatus.SHIPPED,
-          OrderStatus.DELIVERED,
-        ];
+        const allowedStatuses = [OrderStatus.SHIPPED, OrderStatus.DELIVERED];
 
         if (!allowedStatuses.includes(status)) {
           throw new BadRequestException('Seller cannot set this status');

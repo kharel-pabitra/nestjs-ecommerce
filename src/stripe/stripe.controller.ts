@@ -1,5 +1,16 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Req,
+  Headers,
+  BadRequestException,
+} from '@nestjs/common';
+
+import type { RawBodyRequest } from '@nestjs/common';
+import type { Request } from 'express';
 import { StripeService } from './stripe.service';
+import Stripe from 'stripe';
 
 @Controller('stripe')
 export class StripeController {
@@ -15,5 +26,35 @@ export class StripeController {
     return {
       clientSecret: paymentIntent.client_secret,
     };
+  }
+
+  @Post('webhook')
+  handleWebhook(
+    @Req() req: RawBodyRequest<Request>,
+    @Headers('stripe-signature') sig: string,
+  ) {
+    const stripe = this.stripeService.getStripeInstance();
+
+    let event: any;
+
+    try {
+      event = stripe.webhooks.constructEvent(
+        req.rawBody as Buffer,
+        sig,
+        process.env.STRIPE_WEBHOOK_SECRET as string,
+      );
+    } catch (err) {
+      throw new BadRequestException(`Webhook Error: ${err}`);
+    }
+
+    if (event.type === 'payment_intent.succeeded') {
+      const paymentIntent = event.data.object as any;
+
+      const orderId = paymentIntent.metadata?.orderId;
+
+      console.log('✅ Payment success for order:', orderId);
+    }
+
+    return { received: true };
   }
 }

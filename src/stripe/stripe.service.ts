@@ -11,6 +11,10 @@ export class StripeService {
     });
   }
 
+  getStripeInstance(): Stripe.Stripe {
+    return this.stripe;
+  }
+
   async createPaymentIntent(orderId: string, amount: number) {
     try {
       const paymentIntent = await this.stripe.paymentIntents.create({

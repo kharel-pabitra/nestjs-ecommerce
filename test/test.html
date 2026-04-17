@@ -3,16 +3,57 @@
   <head>
     <title>Stripe Test</title>
     <script src="https://js.stripe.com/v3/"></script>
+    <style>
+      body {
+        font-family: Arial;
+        max-width: 400px;
+        margin: 50px auto;
+      }
+
+      #card-element {
+        padding: 12px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        margin-bottom: 16px;
+      }
+
+      button {
+        padding: 12px;
+        width: 100%;
+        background: black;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+
+      #status {
+        margin-top: 12px;
+      }
+    </style>
   </head>
   <body>
+    <h2>Pay $50</h2>
+
+    <div id="card-element"></div>
     <button id="pay">Pay Now</button>
+
+    <div id="status"></div>
 
     <script>
       const stripe = Stripe(
         'pk_test_51TJrS8AC921ibt80QtqOsEmxXgBDbLg4kKexlbIMGJD6cYW9KN6tIUOjusdoFQzR0dM6AgclqXtFeLTQQoWGdPgM0067tHyVDs',
       );
 
+      const elements = stripe.elements();
+      const card = elements.create('card');
+      card.mount('#card-element');
+
+      const statusDiv = document.getElementById('status');
+
       document.getElementById('pay').addEventListener('click', async () => {
+        statusDiv.innerText = 'Processing...';
+
         const res = await fetch(
           'http://localhost:3000/stripe/create-payment-intent',
           {
@@ -27,14 +68,15 @@
 
         const data = await res.json();
 
-        const result = await stripe.confirmPayment({
-          clientSecret: data.clientSecret,
-          confirmParams: {
-            return_url: 'http://localhost:3000/success.html',
-          },
+        const result = await stripe.confirmCardPayment(data.clientSecret, {
+          payment_method: { card },
         });
 
-        console.log(result);
+        if (result.error) {
+          statusDiv.innerText = '❌ ' + result.error.message;
+        } else if (result.paymentIntent.status === 'succeeded') {
+          statusDiv.innerText = '✅ Payment successful!';
+        }
       });
     </script>
   </body>

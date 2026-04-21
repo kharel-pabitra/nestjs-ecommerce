@@ -1,33 +1,40 @@
-Core backend setup
-Built REST API using NestJS
-Modular architecture (User, Auth, Product, Order, Stripe modules)
-Clean separation of concerns (controllers, services, DTOs)
+# E-commerce Backend API (NestJS)
 
-Authentication & Authorization
-JWT-based authentication system
-Refresh token flow using HTTP-only cookies
-Role-based access control (RBAC)
-CUSTOMER
-SELLER
-Guards + decorators (@Roles, JwtAuthGuard, RolesGuard)
+This project is a backend API built using NestJS to simulate a real-world e-commerce system. It focuses on authentication, role-based access control, order management, and payment processing using Stripe.
 
-Validation & DTOs
-DTO-based request validation
-Built-in NestJS validation pipes
-Request sanitization using whitelist and forbidNonWhitelisted
-Strong typing for request payloads
+## Features
 
-Product system
-CRUD operations for products
-Seller-only restrictions for creation/update/delete
-Product stock tracking (unitsInStock)
+- Authentication using JWT and refresh tokens
+- Role-based authorization (Customer / Seller)
+- Product management (CRUD)
+- Order system with stock handling and transactional safety
+- Stripe payment integration using Payment Intents
+- Webhook handling for payment confirmation
+- Secure server-side price calculation
+- DTO validation and request sanitization
 
-Order system (core business logic)
-Order creation with multiple products
-Transaction-based order creation (TypeORM transaction)
-Automatic stock deduction on order creation
-Order status lifecycle:
-PENDING → PAID → SHIPPED → DELIVERED → CANCELLED
-Role-based order updates:
-Customer: cancel / return
-Seller: ship / deliver
+## Tech Stack
+
+- NestJS
+- PostgreSQL
+- TypeORM
+- Stripe API
+- JWT Authentication
+
+## Key Concepts Learned
+
+- Modular backend architecture
+- REST API design
+- Database transactions
+- Payment integration with Stripe
+- Webhook handling and event processing
+- Role-based access control
+
+## Payment Flow
+
+1. User creates order
+2. Backend calculates total price
+3. Stripe Payment Intent is created
+4. User completes payment
+5. Stripe webhook confirms payment
+6. Order status updated to PAID

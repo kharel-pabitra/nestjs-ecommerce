@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { ProductModule } from './product/product.module';
 import { OrderModule } from './order/order.module';
 import { StripeModule } from './stripe/stripe.module';
+import { AppLogger } from './common/service/logger.service';
 
 @Module({
   imports: [
@@ -32,6 +33,6 @@ import { StripeModule } from './stripe/stripe.module';
     StripeModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, AppLogger],
 })
 export class AppModule {}

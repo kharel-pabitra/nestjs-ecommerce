@@ -10,6 +10,7 @@ import { OrderItem } from './orderItem.entity';
 import { Product } from 'src/product/product.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderStatus } from './enums/order-status.enum';
+import { NotFoundError } from 'rxjs';
 
 @Injectable()
 export class OrderService {
@@ -87,6 +88,21 @@ export class OrderService {
     return query.getMany();
   }
 
+  async validateOrderForPayment(orderId: string): Promise<Order> {
+    const order = await this.orderRepository.findOne({
+      where: { id: orderId },
+      relations: ['items'],
+    });
+
+    if (!order) throw new NotFoundException('Order Not found.');
+
+    if (order.status !== OrderStatus.PENDING) {
+      throw new BadRequestException('Order already processed');
+    }
+
+    return order;
+  }
+
   async updateStatusWithRole(
     id: string,
     status: OrderStatus,
@@ -149,5 +165,29 @@ export class OrderService {
 
       return manager.save(order);
     });
+  }
+
+  async markOrderPaid(orderId: string) {
+    const order = await this.orderRepository.findOne({
+      where: { id: orderId },
+    });
+
+    if (!order) throw new NotFoundException('Order not found');
+
+    if (order.status === OrderStatus.PAID) return;
+
+    order.status = OrderStatus.PAID;
+
+    return this.orderRepository.save(order);
+  }
+
+  async IsOrderPaid(orderId: string) {
+    const order = await this.orderRepository.findOne({
+      where: { id: orderId },
+    });
+
+    if (!order) throw new NotFoundException('Order not found');
+
+    return order.status === OrderStatus.PAID;
   }
 }

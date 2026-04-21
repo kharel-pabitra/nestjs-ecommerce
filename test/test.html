@@ -1,44 +1,68 @@
 <!doctype html>
 <html>
   <head>
-    <title>Stripe Test</title>
+    <title>Stripe + Order Test</title>
     <script src="https://js.stripe.com/v3/"></script>
     <style>
       body {
         font-family: Arial;
-        max-width: 400px;
-        margin: 50px auto;
+        max-width: 500px;
+        margin: 40px auto;
       }
 
-      #card-element {
-        padding: 12px;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        margin-bottom: 16px;
+      input {
+        width: 100%;
+        padding: 8px;
+        margin: 5px 0;
       }
 
       button {
-        padding: 12px;
+        padding: 10px;
         width: 100%;
+        margin-top: 10px;
         background: black;
         color: white;
         border: none;
-        border-radius: 6px;
         cursor: pointer;
       }
 
+      #card-element {
+        padding: 10px;
+        border: 1px solid #ccc;
+        margin-top: 10px;
+        border-radius: 6px;
+      }
+
       #status {
-        margin-top: 12px;
+        margin-top: 15px;
+      }
+
+      pre {
+        background: #f4f4f4;
+        padding: 10px;
       }
     </style>
   </head>
-  <body>
-    <h2>Pay $50</h2>
 
-    <!-- testing -->
+  <body>
+    <h2>1. Create Order</h2>
+
+    <input id="productId" placeholder="Product ID" />
+    <input id="qty" placeholder="Quantity" type="number" value="1" />
+
+    <button onclick="createOrder()">Create Order</button>
+
+    <pre id="orderResult"></pre>
+
+    <hr />
+
+    <h2>2. Pay Order</h2>
+
+    <input id="orderId" placeholder="Order ID" />
 
     <div id="card-element"></div>
-    <button id="pay">Pay Now</button>
+
+    <button onclick="pay()">Pay Now</button>
 
     <div id="status"></div>
 
@@ -53,25 +77,65 @@
 
       const statusDiv = document.getElementById('status');
 
-      document.getElementById('pay').addEventListener('click', async () => {
+      let token = ''; // if you need auth later
+
+      async function createOrder() {
+        const productId = document.getElementById('productId').value;
+        const qty = parseInt(document.getElementById('qty').value);
+
+        const res = await fetch('http://localhost:3000/orders', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization:
+              'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI1NmYyMDFjNS1hOTNjLTQzODYtOTVjOS02Zjk5Yzc5ZTQ0NTIiLCJlbWFpbCI6InBraGFyZWxAZ21haWwuY29tIiwicm9sZSI6ImN1c3RvbWVyIiwiaWF0IjoxNzc2NzQzMTE1LCJleHAiOjE3NzY3NDQwMTV9.hoMSvH1AyTEP3jKXAw3beK43HStIiF_7Q9wCvWJEFsM',
+          },
+          body: JSON.stringify({
+            orderItems: [
+              {
+                product: productId,
+                quantity: qty,
+              },
+            ],
+          }),
+        });
+
+        const data = await res.json();
+
+        document.getElementById('orderResult').innerText = JSON.stringify(
+          data,
+          null,
+          2,
+        );
+
+        // auto fill orderId for payment step
+        document.getElementById('orderId').value = data.id;
+      }
+
+      async function pay() {
         statusDiv.innerText = 'Processing...';
 
+        const orderId = document.getElementById('orderId').value;
+
+        // 1. create payment intent
         const res = await fetch(
           'http://localhost:3000/stripe/create-payment-intent',
           {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              orderId: '123',
-              amount: 50,
-            }),
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ orderId }),
           },
         );
 
         const data = await res.json();
 
+        // 2. confirm payment
         const result = await stripe.confirmCardPayment(data.clientSecret, {
-          payment_method: { card },
+          payment_method: {
+            card,
+          },
         });
 
         if (result.error) {
@@ -79,7 +143,7 @@
         } else if (result.paymentIntent.status === 'succeeded') {
           statusDiv.innerText = '✅ Payment successful!';
         }
-      });
+      }
     </script>
   </body>
 </html>

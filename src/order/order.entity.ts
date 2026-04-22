@@ -5,6 +5,8 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
   Column,
+  UpdateDateColumn,
+  CreateDateColumn,
 } from 'typeorm';
 import { OrderItem } from './orderItem.entity';
 import { OrderStatus } from './enums/order-status.enum';
@@ -25,4 +27,13 @@ export class Order {
 
   @Column('decimal')
   totalPrice: number;
+
+  @Column({ nullable: true, unique: true })
+  paymentIntentId: string;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

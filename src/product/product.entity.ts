@@ -22,6 +22,9 @@ export class Product {
   @Column()
   unitsInStock: number;
 
+  @Column({ default: 0 })
+  unitsReserved: number;
+
   @OneToMany(() => OrderItem, (item) => item.product)
   items: OrderItem[];
 

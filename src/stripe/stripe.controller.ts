@@ -1,4 +1,5 @@
-import Stripe from 'stripe';
+// import Stripe from 'stripe';
+import type Stripe from 'stripe';
 import {
   Controller,
   Post,
@@ -32,6 +33,8 @@ export class StripeController {
       amount,
     );
 
+    await this.orderService.attachPaymentIntent(order.id, paymentIntent.id);
+
     return {
       clientSecret: paymentIntent.client_secret,
     };
@@ -42,9 +45,7 @@ export class StripeController {
     @Req() req: RawBodyRequest<Request>,
     @Headers('stripe-signature') sig: string,
   ) {
-    console.log('🔥 WEBHOOK HIT');
     const stripe = this.stripeService.getStripeInstance();
-    console.log('🔐 Signature present:', !!sig);
 
     let event: any;
 
@@ -54,22 +55,24 @@ export class StripeController {
         sig,
         process.env.STRIPE_WEBHOOK_SECRET as string,
       );
-
-      console.log('➡️ Event type:', event.type);
-      console.log('➡️ Event ID:', event.id);
     } catch (err) {
       throw new BadRequestException(`Webhook Error: ${err}`);
     }
 
-    if (event.type === 'payment_intent.succeeded') {
-      const paymentIntent = event.data.object as any;
+    const paymentIntent = event.data.object as any;
 
-      console.log('💰 PaymentIntent ID:', paymentIntent.id);
-      console.log('📦 Metadata:', paymentIntent.metadata);
-      const orderId = paymentIntent.metadata?.orderId;
+    switch (event.type) {
+      case 'payment_intent.succeeded':
+        await this.orderService.markOrderPaid(paymentIntent.id);
+        break;
 
-      await this.orderService.markOrderPaid(orderId as string);
-      console.log('💰 Order marked as PAID:', orderId);
+      case 'payment_intent.payment_failed':
+        await this.orderService.markOrderFailed(paymentIntent.id);
+        break;
+
+      case 'payment_intent.canceled':
+        await this.orderService.markOrderFailed(paymentIntent.id);
+        break;
     }
 
     return { received: true };

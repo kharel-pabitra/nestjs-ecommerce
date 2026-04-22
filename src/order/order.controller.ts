@@ -43,18 +43,18 @@ export class OrderController {
     return this.orderService.findAll(user.userId);
   }
 
-  @Patch(':id/status')
-  @UseGuards(RolesGuard)
-  @Roles(UserRole.CUSTOMER, UserRole.SELLER)
-  updateStatus(
-    @Req() req,
-    @Param('id') id: string,
-    @Body('status') status: OrderStatus,
-  ) {
-    const user = req.user as JwtUserDto;
-    return this.orderService.updateStatusWithRole(id, status, {
-      id: user.userId,
-      role: user.role,
-    });
-  }
+  // @Patch(':id/status')
+  // @UseGuards(RolesGuard)
+  // @Roles(UserRole.CUSTOMER, UserRole.SELLER)
+  // updateStatus(
+  //   @Req() req,
+  //   @Param('id') id: string,
+  //   @Body('status') status: OrderStatus,
+  // ) {
+  //   const user = req.user as JwtUserDto;
+  //   return this.orderService.updateStatusWithRole(id, status, {
+  //     id: user.userId,
+  //     role: user.role,
+  //   });
+  // }
 }

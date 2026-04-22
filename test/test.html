@@ -1,12 +1,13 @@
 <!doctype html>
 <html>
   <head>
-    <title>Stripe + Order Test</title>
+    <title>Stripe + Cart Order Test</title>
     <script src="https://js.stripe.com/v3/"></script>
+
     <style>
       body {
         font-family: Arial;
-        max-width: 500px;
+        max-width: 600px;
         margin: 40px auto;
       }
 
@@ -33,40 +34,52 @@
         border-radius: 6px;
       }
 
-      #status {
-        margin-top: 15px;
-      }
-
       pre {
         background: #f4f4f4;
         padding: 10px;
+      }
+
+      .section {
+        margin-bottom: 30px;
       }
     </style>
   </head>
 
   <body>
-    <h2>1. Create Order</h2>
+    <h2>🛒 Cart System</h2>
 
-    <input id="productId" placeholder="Product ID" />
-    <input id="qty" placeholder="Quantity" type="number" value="1" />
+    <div class="section">
+      <h3>Add Product</h3>
 
-    <button onclick="createOrder()">Create Order</button>
+      <input id="productId" placeholder="Product ID" />
+      <input id="qty" placeholder="Quantity" type="number" value="1" />
 
-    <pre id="orderResult"></pre>
+      <button onclick="addToCart()">Add to Cart</button>
+
+      <h4>Cart</h4>
+      <pre id="cartView">[]</pre>
+
+      <button onclick="createOrder()">Create Order</button>
+    </div>
 
     <hr />
 
-    <h2>2. Pay Order</h2>
+    <div class="section">
+      <h2>💳 Pay Order</h2>
 
-    <input id="orderId" placeholder="Order ID" />
+      <input id="orderId" placeholder="Order ID" />
 
-    <div id="card-element"></div>
+      <div id="card-element"></div>
 
-    <button onclick="pay()">Pay Now</button>
+      <button onclick="pay()">Pay Now</button>
 
-    <div id="status"></div>
+      <div id="status"></div>
+    </div>
 
     <script>
+      // =====================
+      // Stripe setup
+      // =====================
       const stripe = Stripe(
         'pk_test_51TJrS8AC921ibt80QtqOsEmxXgBDbLg4kKexlbIMGJD6cYW9KN6tIUOjusdoFQzR0dM6AgclqXtFeLTQQoWGdPgM0067tHyVDs',
       );
@@ -77,47 +90,102 @@
 
       const statusDiv = document.getElementById('status');
 
-      let token = ''; // if you need auth later
+      // =====================
+      // CART STATE
+      // =====================
+      let cart = [];
 
-      async function createOrder() {
+      function addToCart() {
         const productId = document.getElementById('productId').value;
         const qty = parseInt(document.getElementById('qty').value);
 
-        const res = await fetch('http://localhost:3000/orders', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization:
-              'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI1NmYyMDFjNS1hOTNjLTQzODYtOTVjOS02Zjk5Yzc5ZTQ0NTIiLCJlbWFpbCI6InBraGFyZWxAZ21haWwuY29tIiwicm9sZSI6ImN1c3RvbWVyIiwiaWF0IjoxNzc2NzQzMTE1LCJleHAiOjE3NzY3NDQwMTV9.hoMSvH1AyTEP3jKXAw3beK43HStIiF_7Q9wCvWJEFsM',
-          },
-          body: JSON.stringify({
-            orderItems: [
-              {
-                product: productId,
-                quantity: qty,
-              },
-            ],
-          }),
+        if (!productId || !qty) return;
+
+        cart.push({
+          product: productId,
+          quantity: qty,
         });
 
-        const data = await res.json();
+        renderCart();
 
-        document.getElementById('orderResult').innerText = JSON.stringify(
-          data,
+        document.getElementById('productId').value = '';
+        document.getElementById('qty').value = 1;
+      }
+
+      function renderCart() {
+        document.getElementById('cartView').innerText = JSON.stringify(
+          cart,
           null,
           2,
         );
-
-        // auto fill orderId for payment step
-        document.getElementById('orderId').value = data.id;
       }
 
+      // =====================
+      // CREATE ORDER
+      // =====================
+      async function createOrder() {
+        if (cart.length === 0) {
+          alert('Cart is empty');
+          return;
+        }
+
+        try {
+          const res = await fetch('http://localhost:3000/orders', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization:
+                'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NWIxYjQzMC1iMzA3LTQ1MmEtOWNjNy0zNGZmYzQ3ZDgyOWIiLCJlbWFpbCI6InBraGFyZWwxNTZAZ21haWwuY29tIiwicm9sZSI6ImN1c3RvbWVyIiwiaWF0IjoxNzc2ODMzNDAzLCJleHAiOjE3NzY4MzQzMDN9.LzMZN6psENaLOiV2WfqbYvrIXCRMu7o2f1sagcbvzyY',
+            },
+            body: JSON.stringify({
+              orderItems: cart,
+            }),
+          });
+
+          const data = await res.json();
+
+          // ❗ IMPORTANT: handle backend errors properly
+          if (!res.ok) {
+            console.error('Order failed:', data);
+
+            alert(data.message || 'Failed to create order');
+            document.getElementById('orderResult').innerText = JSON.stringify(
+              data,
+              null,
+              2,
+            );
+
+            return;
+          }
+
+          // success path
+          document.getElementById('orderId').value = data.id;
+
+          console.log('Order created:', data);
+
+          cart = [];
+          renderCart();
+
+          document.getElementById('orderResult').innerText = JSON.stringify(
+            data,
+            null,
+            2,
+          );
+        } catch (err) {
+          console.error('Network error:', err);
+
+          document.getElementById('orderResult').innerText = err.message;
+        }
+      }
+
+      // =====================
+      // PAYMENT
+      // =====================
       async function pay() {
         statusDiv.innerText = 'Processing...';
 
         const orderId = document.getElementById('orderId').value;
 
-        // 1. create payment intent
         const res = await fetch(
           'http://localhost:3000/stripe/create-payment-intent',
           {
@@ -131,7 +199,6 @@
 
         const data = await res.json();
 
-        // 2. confirm payment
         const result = await stripe.confirmCardPayment(data.clientSecret, {
           payment_method: {
             card,

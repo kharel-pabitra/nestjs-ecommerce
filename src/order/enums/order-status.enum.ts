@@ -1,8 +1,10 @@
 export enum OrderStatus {
-  PENDING = 'pending',
-  PAID = 'paid',
+  PENDING = 'pending', // created, stock reserved
+  PAID = 'paid', // confirmed
+  FAILED = 'failed', // payment failed
   SHIPPED = 'shipped',
   DELIVERED = 'delivered',
-  CANCELLED = 'cancelled',
+  CANCELLED = 'cancelled', // manually cancelled
+  EXPIRED = 'expired', //checkout abandoned
   RETURNED = 'returned',
 }

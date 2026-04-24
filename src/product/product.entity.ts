@@ -25,6 +25,9 @@ export class Product {
   @Column({ default: 0 })
   unitsReserved: number;
 
+  @Column('text', { array: true, default: [] })
+  images: string[];
+
   @OneToMany(() => OrderItem, (item) => item.product)
   items: OrderItem[];
 

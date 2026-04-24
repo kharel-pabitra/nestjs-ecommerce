@@ -43,18 +43,33 @@ export class OrderController {
     return this.orderService.findAll(user.userId);
   }
 
-  // @Patch(':id/status')
-  // @UseGuards(RolesGuard)
-  // @Roles(UserRole.CUSTOMER, UserRole.SELLER)
-  // updateStatus(
-  //   @Req() req,
-  //   @Param('id') id: string,
-  //   @Body('status') status: OrderStatus,
-  // ) {
-  //   const user = req.user as JwtUserDto;
-  //   return this.orderService.updateStatusWithRole(id, status, {
-  //     id: user.userId,
-  //     role: user.role,
-  //   });
-  // }
+  @Patch(':id/cancel')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.CUSTOMER)
+  cancel(@Req() req, @Param('id') id: string) {
+    const user = req.user as JwtUserDto;
+    return this.orderService.cancelOrderByCustomer(user.userId, id);
+  }
+
+  @Patch(':id/return')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.CUSTOMER)
+  returnOrder(@Req() req, @Param('id') id: string) {
+    const user = req.user as JwtUserDto;
+    return this.orderService.returnOrderByCustomer(user.userId, id);
+  }
+
+  @Patch(':id/ship')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.SELLER)
+  ship(@Param('id') id: string) {
+    return this.orderService.markOrderShipped(id);
+  }
+
+  @Patch(':id/deliver')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.SELLER)
+  deliver(@Param('id') id: string) {
+    return this.orderService.markOrderDelivered(id);
+  }
 }

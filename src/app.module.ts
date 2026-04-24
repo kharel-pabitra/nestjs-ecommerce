@@ -10,6 +10,7 @@ import { ProductModule } from './product/product.module';
 import { OrderModule } from './order/order.module';
 import { StripeModule } from './stripe/stripe.module';
 import { AppLogger } from './common/service/logger.service';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
@@ -24,13 +25,14 @@ import { AppLogger } from './common/service/logger.service';
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
       autoLoadEntities: true,
-      synchronize: true, // only for dev
+      synchronize: process.env.NODE_ENV !== 'production',
     }),
     UserModule,
     AuthModule,
     ProductModule,
     OrderModule,
     StripeModule,
+    UploadModule,
   ],
   controllers: [AppController],
   providers: [AppService, AppLogger],

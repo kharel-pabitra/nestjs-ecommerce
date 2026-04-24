@@ -1,5 +1,9 @@
 import * as bcrypt from 'bcrypt';
-import { Injectable, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './user.entity';
 import { Repository } from 'typeorm';
@@ -31,6 +35,18 @@ export class UserService {
       role,
       password: hashedPassword,
     });
+
+    return this.userRepository.save(user);
+  }
+
+  async updateAvatar(userId: string, avatar: string) {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!user) throw new NotFoundException('User not found');
+
+    user.avatar = avatar;
 
     return this.userRepository.save(user);
   }

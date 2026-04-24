@@ -31,6 +31,9 @@ export class User {
   })
   role: UserRole;
 
+  @Column({ nullable: true })
+  avatar: string;
+
   @OneToMany(() => Order, (order) => order.user)
   order: Order;
 

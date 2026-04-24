@@ -44,10 +44,24 @@ export class ProductController {
     return this.productService.update(id, updateProductDto);
   }
 
+  @Patch(':id/images')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SELLER)
+  addImages(@Param('id') id: string, @Body('images') images: string[]) {
+    return this.productService.addImages(id, images);
+  }
+
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SELLER)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.productService.remove(id);
+  }
+
+  @Patch(':id/images/remove')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SELLER)
+  removeImages(@Param('id') id: string, @Body('images') images: string[]) {
+    return this.productService.removeImages(id, images);
   }
 }

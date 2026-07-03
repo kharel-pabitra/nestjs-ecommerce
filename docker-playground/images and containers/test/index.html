@@ -1,0 +1,216 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Stripe + Cart Order Test</title>
+    <script src="https://js.stripe.com/v3/"></script>
+
+    <style>
+      body {
+        font-family: Arial;
+        max-width: 600px;
+        margin: 40px auto;
+      }
+
+      input {
+        width: 100%;
+        padding: 8px;
+        margin: 5px 0;
+      }
+
+      button {
+        padding: 10px;
+        width: 100%;
+        margin-top: 10px;
+        background: black;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+
+      #card-element {
+        padding: 10px;
+        border: 1px solid #ccc;
+        margin-top: 10px;
+        border-radius: 6px;
+      }
+
+      pre {
+        background: #f4f4f4;
+        padding: 10px;
+      }
+
+      .section {
+        margin-bottom: 30px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h2>🛒 Cart System inside the docker playground</h2>
+
+    <div class="section">
+      <h3>Add Product</h3>
+
+      <input id="productId" placeholder="Product ID" />
+      <input id="qty" placeholder="Quantity" type="number" value="1" />
+
+      <button onclick="addToCart()">Add to Cart</button>
+
+      <h4>Cart</h4>
+      <pre id="cartView">[]</pre>
+
+      <button onclick="createOrder()">Create Order</button>
+    </div>
+
+    <hr />
+
+    <div class="section">
+      <h2>💳 Pay Order</h2>
+
+      <input id="orderId" placeholder="Order ID" />
+
+      <div id="card-element"></div>
+
+      <button onclick="pay()">Pay Now</button>
+
+      <div id="status"></div>
+    </div>
+
+    <script>
+      // =====================
+      // Stripe setup
+      // =====================
+      const stripe = Stripe(
+        'pk_test_51TJrS8AC921ibt80QtqOsEmxXgBDbLg4kKexlbIMGJD6cYW9KN6tIUOjusdoFQzR0dM6AgclqXtFeLTQQoWGdPgM0067tHyVDs',
+      );
+
+      const elements = stripe.elements();
+      const card = elements.create('card');
+      card.mount('#card-element');
+
+      const statusDiv = document.getElementById('status');
+
+      // =====================
+      // CART STATE
+      // =====================
+      let cart = [];
+
+      function addToCart() {
+        const productId = document.getElementById('productId').value;
+        const qty = parseInt(document.getElementById('qty').value);
+
+        if (!productId || !qty) return;
+
+        cart.push({
+          product: productId,
+          quantity: qty,
+        });
+
+        renderCart();
+
+        document.getElementById('productId').value = '';
+        document.getElementById('qty').value = 1;
+      }
+
+      function renderCart() {
+        document.getElementById('cartView').innerText = JSON.stringify(
+          cart,
+          null,
+          2,
+        );
+      }
+
+      // =====================
+      // CREATE ORDER
+      // =====================
+      async function createOrder() {
+        if (cart.length === 0) {
+          alert('Cart is empty');
+          return;
+        }
+
+        try {
+          const res = await fetch('http://localhost:3000/orders', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization:
+                'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NWIxYjQzMC1iMzA3LTQ1MmEtOWNjNy0zNGZmYzQ3ZDgyOWIiLCJlbWFpbCI6InBraGFyZWwxNTZAZ21haWwuY29tIiwicm9sZSI6ImN1c3RvbWVyIiwiaWF0IjoxNzc2ODMzNDAzLCJleHAiOjE3NzY4MzQzMDN9.LzMZN6psENaLOiV2WfqbYvrIXCRMu7o2f1sagcbvzyY',
+            },
+            body: JSON.stringify({
+              orderItems: cart,
+            }),
+          });
+
+          const data = await res.json();
+
+          // ❗ IMPORTANT: handle backend errors properly
+          if (!res.ok) {
+            console.error('Order failed:', data);
+
+            alert(data.message || 'Failed to create order');
+            document.getElementById('orderResult').innerText = JSON.stringify(
+              data,
+              null,
+              2,
+            );
+
+            return;
+          }
+
+          // success path
+          document.getElementById('orderId').value = data.id;
+
+          console.log('Order created:', data);
+
+          cart = [];
+          renderCart();
+
+          document.getElementById('orderResult').innerText = JSON.stringify(
+            data,
+            null,
+            2,
+          );
+        } catch (err) {
+          console.error('Network error:', err);
+
+          document.getElementById('orderResult').innerText = err.message;
+        }
+      }
+
+      // =====================
+      // PAYMENT
+      // =====================
+      async function pay() {
+        statusDiv.innerText = 'Processing...';
+
+        const orderId = document.getElementById('orderId').value;
+
+        const res = await fetch(
+          'http://localhost:3000/stripe/create-payment-intent',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ orderId }),
+          },
+        );
+
+        const data = await res.json();
+
+        const result = await stripe.confirmCardPayment(data.clientSecret, {
+          payment_method: {
+            card,
+          },
+        });
+
+        if (result.error) {
+          statusDiv.innerText = '❌ ' + result.error.message;
+        } else if (result.paymentIntent.status === 'succeeded') {
+          statusDiv.innerText = '✅ Payment successful!';
+        }
+      }
+    </script>
+  </body>
+</html>

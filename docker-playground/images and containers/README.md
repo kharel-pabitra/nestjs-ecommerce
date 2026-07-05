@@ -45,6 +45,7 @@ Reason:
 - A container lives as long as its main process lives. -> process is important. For os like ubuntu, porcess is echo, bash, for db like mongod , the docker run mongod itself is a process on its own.
 - Images are templates; containers are disposable instances.
 - docker inspect shows both the configuration we supplied and runtime information Docker generated.
+- Every image defines a default process (CMD/ENTRYPOINT). A container runs only while that process is alive. Images like PostgreSQL start a database server automatically, while minimal images such as Alpine need a command (e.g. `sh`, `echo`, or `sleep infinity`) to keep the container running.
 
 ## commands
 ``` 

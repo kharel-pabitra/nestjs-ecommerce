@@ -1,0 +1,16 @@
+volumes:
+  postgres_data:
+
+services: 
+  postgres: 
+    image: postgres:16
+    container_name: postgres-volume-playground
+    restart: unless-stopped
+    environment: 
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: volume_pg
+    ports: 
+      - "5432:5432"
+    volumes: 
+      - postgres_data:/var/lib/postgresql/data

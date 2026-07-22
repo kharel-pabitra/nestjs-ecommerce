@@ -1,0 +1,12 @@
+# FROM alpine
+
+# RUN echo "Built at build time" > build.txt
+
+# CMD ["cat", "build.txt"]
+
+FROM alpine
+
+RUN echo "Hello"
+RUN date > build.txt
+
+CMD ["cat", "build.txt"]

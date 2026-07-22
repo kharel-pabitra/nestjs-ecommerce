@@ -1,9 +1,9 @@
-# FROM alpine
-
-# CMD ["echo","Hello World!"]
-
 FROM alpine
 
-COPY hello.txt .
+COPY package.json .
 
-CMD ["cat", "hello.txt"]
+RUN echo "Installing dependencies..."
+
+COPY . .
+
+CMD ["sh"]

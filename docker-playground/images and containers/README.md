@@ -59,3 +59,23 @@ docker stop <container>
 docker run <image> {default runs foreground shows all logs as it runs}
 docker run -d <image> {detached: runs in background hence does not show logs}
 ```
+
+
+               IMAGE
+        -------------------
+        /
+        hello.txt
+        Dockerfile result
+        alpine linux
+        cat command
+        -------------------
+                ▲
+                │ Read Only
+                │
+        ┌───────┴────────┐
+        │                │
+        │                │
+   Container A      Container B
+   ------------     ------------
+   writable         writable
+   layer            layer

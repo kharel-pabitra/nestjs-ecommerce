@@ -1,0 +1,9 @@
+# FROM alpine
+
+# CMD ["echo","Hello World!"]
+# ----------------------------------------------------
+FROM alpine
+
+COPY hello.txt .
+
+CMD ["cat", "hello.txt"]

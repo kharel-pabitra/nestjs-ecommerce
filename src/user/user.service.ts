@@ -1,4 +1,6 @@
 import * as bcrypt from 'bcrypt';
+import { Logger } from '@nestjs/common';
+
 import {
   Injectable,
   BadRequestException,
@@ -11,6 +13,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 
 @Injectable()
 export class UserService {
+  private readonly logger = new Logger(UserService.name);
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
@@ -19,11 +22,14 @@ export class UserService {
   async create(createUserDto: CreateUserDto): Promise<User> {
     const { email, password, name, role } = createUserDto;
 
+    this.logger.log(`Registration attempt for email: ${email}`);
+
     const existingUser = await this.userRepository.findOne({
       where: { email },
     });
 
     if (existingUser) {
+      this.logger.warn(`Registration failed. Email already exists: ${email}`);
       throw new BadRequestException('Email already in use');
     }
 
@@ -35,8 +41,11 @@ export class UserService {
       role,
       password: hashedPassword,
     });
+    const savedUser = await this.userRepository.save(user);
 
-    return this.userRepository.save(user);
+    this.logger.log(`User created successfully: ${savedUser.id}`);
+
+    return savedUser;
   }
 
   async updateAvatar(userId: string, avatar: string) {
@@ -44,10 +53,15 @@ export class UserService {
       where: { id: userId },
     });
 
-    if (!user) throw new NotFoundException('User not found');
-
+    if (!user) {
+      this.logger.warn(`Update failed. User Not Found: ${userId}`);
+      throw new NotFoundException('User not found');
+    }
     user.avatar = avatar;
+    const savedUser = await this.userRepository.save(user);
 
-    return this.userRepository.save(user);
+    this.logger.log(`User Avatar updated successfully: ${savedUser.id}`);
+
+    return savedUser;
   }
 }

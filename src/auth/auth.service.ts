@@ -1,5 +1,6 @@
 import * as bcrypt from 'bcrypt';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
+
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../user/user.entity';
 import { Repository } from 'typeorm';
@@ -9,6 +10,7 @@ import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
@@ -25,12 +27,14 @@ export class AuthService {
       .getOne();
 
     if (!user) {
+      this.logger.warn(`Login failed. Invalid credentials`);
       throw new UnauthorizedException('Invalid credentials');
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
+      this.logger.warn(`Login failed. Invalid Password`);
       throw new UnauthorizedException('Invalid credentials');
     }
 
@@ -58,6 +62,8 @@ export class AuthService {
     try {
       const payload = this.jwtService.verify<JwtUserDto>(token);
 
+      this.logger.log(`Refresh token accepted for user ${payload.userId}`);
+
       const newAccessToken = this.jwtService.sign(
         { userId: payload.userId, email: payload.email, role: payload.role },
         { expiresIn: '15m' },
@@ -67,6 +73,7 @@ export class AuthService {
         accessToken: newAccessToken,
       };
     } catch (err) {
+      this.logger.warn('Refresh token validation failed');
       throw new UnauthorizedException('Invalid refresh token');
     }
   }

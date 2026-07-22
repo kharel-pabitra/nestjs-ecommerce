@@ -11,6 +11,8 @@ import {
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { AddImagesDto } from './dto/add-images.dto';
+import { RemoveImagesDto } from './dto/remove-images.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
@@ -41,14 +43,15 @@ export class ProductController {
   @Roles(UserRole.SELLER)
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
+    console.log('UPDATE FUNCTION CONRTROLLER');
     return this.productService.update(id, updateProductDto);
   }
 
   @Patch(':id/images')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SELLER)
-  addImages(@Param('id') id: string, @Body('images') images: string[]) {
-    return this.productService.addImages(id, images);
+  addImages(@Param('id') id: string, @Body() addImagesDto: AddImagesDto) {
+    return this.productService.addImages(id, addImagesDto);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -61,7 +64,10 @@ export class ProductController {
   @Patch(':id/images/remove')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SELLER)
-  removeImages(@Param('id') id: string, @Body('images') images: string[]) {
-    return this.productService.removeImages(id, images);
+  removeImages(
+    @Param('id') id: string,
+    @Body() removeImagesDto: RemoveImagesDto,
+  ) {
+    return this.productService.removeImages(id, removeImagesDto);
   }
 }

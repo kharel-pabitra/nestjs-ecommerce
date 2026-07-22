@@ -35,8 +35,6 @@ export class AuthController {
   refresh(@Req() req: Request) {
     const refreshToken = req.cookies?.refreshToken;
 
-    console.log('*****refresh token cookie', req.cookies);
-
     if (!refreshToken) {
       throw new UnauthorizedException('No refresh token');
     }

@@ -2,15 +2,19 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './product.entity';
 import { Repository } from 'typeorm';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { RemoveImagesDto } from './dto/remove-images.dto';
+import { AddImagesDto } from './dto/add-images.dto';
 
 @Injectable()
 export class ProductService {
+  private readonly logger = new Logger(ProductService.name);
   constructor(
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
@@ -18,7 +22,12 @@ export class ProductService {
 
   async create(createProductDto: CreateProductDto): Promise<Product> {
     const product = this.productRepository.create(createProductDto);
-    return this.productRepository.save(product);
+
+    const savedProduct = await this.productRepository.save(product);
+
+    this.logger.log(`Product created: ${savedProduct.id}`);
+
+    return savedProduct;
   }
 
   async findAll(): Promise<Product[]> {
@@ -29,6 +38,7 @@ export class ProductService {
     const product = await this.productRepository.findOne({ where: { id } });
 
     if (!product) {
+      this.logger.warn(`Product not found: ${id}`);
       throw new NotFoundException('Product not found');
     }
 
@@ -43,26 +53,43 @@ export class ProductService {
 
     Object.assign(product, updateProductDto);
 
-    return this.productRepository.save(product);
+    const updatedProduct = await this.productRepository.save(product);
+
+    this.logger.log(`Product updated: ${updatedProduct.id}`);
+
+    return updatedProduct;
   }
 
-  async addImages(id: string, images: string[]) {
+  async addImages(id: string, addImagesDto: AddImagesDto) {
+    const images = addImagesDto.images;
+
     const product = await this.findOne(id);
 
     product.images = [...(product.images || []), ...images];
 
-    return this.productRepository.save(product);
+    const savedProduct = await this.productRepository.save(product);
+
+    this.logger.log(`Added ${images.length} images to product ${id}`);
+
+    return savedProduct;
   }
   async remove(id: string): Promise<{ message: string }> {
     const product = await this.findOne(id);
 
     await this.productRepository.remove(product);
 
+    this.logger.log(`Product deleted: ${id}`);
+
     return { message: 'Product deleted successfully' };
   }
 
-  async removeImages(productId: string, imagesToRemove: string[]) {
-    if (!imagesToRemove.length) {
+  async removeImages(productId: string, removeImagesDto: RemoveImagesDto) {
+    const imagesToRemove = removeImagesDto.images;
+
+    if (imagesToRemove.length === 0) {
+      this.logger.warn(
+        `Remove images failed. No images provided for product ${productId}`,
+      );
       throw new BadRequestException('No images provided');
     }
 
@@ -84,6 +111,10 @@ export class ProductService {
     product.images = existingImages.filter((img) => !removed.includes(img));
 
     await this.productRepository.save(product);
+
+    this.logger.log(
+      `Removed ${removed.length} images from product ${productId}`,
+    );
 
     return {
       removed,

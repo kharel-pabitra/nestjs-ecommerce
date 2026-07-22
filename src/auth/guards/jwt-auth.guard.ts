@@ -7,7 +7,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 
   canActivate(context: ExecutionContext) {
     const authStatus = super.canActivate(context);
-    this.logger.log(`JWT authentication attempt Status:${authStatus}`);
+    this.logger.log(`JWT authentication attempt Status: ${!!authStatus}`);
     return authStatus;
   }
 }

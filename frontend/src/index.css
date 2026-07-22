@@ -1,0 +1,47 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-paper: #F2F3F1;
+  --color-ink: #14171C;
+  --color-line: #D8DBD6;
+  --color-panel: #FFFFFF;
+  --color-indigo: #4338CA;
+  --color-indigo-soft: #EEF0FC;
+  --color-amber: #B45309;
+  --color-amber-soft: #FDF3E3;
+  --color-emerald: #047857;
+  --color-emerald-soft: #E7F5EE;
+  --color-red: #B91C1C;
+  --color-red-soft: #FBEAEA;
+  --color-slate-muted: #6B7178;
+
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+}
+
+.font-display { font-family: var(--font-display); }
+.font-mono { font-family: var(--font-mono); }
+
+.stamp {
+  border: 1.5px solid currentColor;
+  border-radius: 9999px;
+  transform: rotate(-2deg);
+}
+
+::selection {
+  background: var(--color-indigo);
+  color: white;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-indigo);
+  outline-offset: 2px;
+}

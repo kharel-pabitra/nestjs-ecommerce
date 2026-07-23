@@ -16,7 +16,7 @@ npm run dev
 Runs at http://localhost:5173. Enable CORS with credentials on the backend:
 
 ```ts
-app.enableCors({ origin: 'http://localhost:5173', credentials: true });
+// app.enableCors({ origin: 'http://localhost:5173', credentials: true });
 ```
 
 ## How it works

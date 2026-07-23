@@ -28,6 +28,7 @@ async function bootstrap() {
     origin: corsOrigins,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     credentials: true,
+    maxAge: process.env.NODE_ENV === 'development' ? 0 : 86400, // 24 hours in production
   });
 
   const port = process.env.PORT ?? 3000;

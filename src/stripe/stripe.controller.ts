@@ -1,5 +1,3 @@
-// import Stripe from 'stripe';
-import type Stripe from 'stripe';
 import {
   Controller,
   Post,
@@ -7,6 +5,7 @@ import {
   Req,
   Headers,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 
 import type { RawBodyRequest } from '@nestjs/common';
@@ -17,6 +16,7 @@ import { OrderService } from 'src/order/order.service';
 
 @Controller('stripe')
 export class StripeController {
+  private readonly logger = new Logger(StripeController.name);
   constructor(
     private readonly stripeService: StripeService,
     private readonly orderService: OrderService,
@@ -45,6 +45,7 @@ export class StripeController {
     @Req() req: RawBodyRequest<Request>,
     @Headers('stripe-signature') sig: string,
   ) {
+    this.logger.log('Received Stripe webhook');
     const stripe = this.stripeService.getStripeInstance();
 
     let event: any;
@@ -55,7 +56,12 @@ export class StripeController {
         sig,
         process.env.STRIPE_WEBHOOK_SECRET as string,
       );
+      this.logger.log(`Webhook verified successfully: ${event.type}`);
     } catch (err) {
+      this.logger.error(
+        'Webhook signature verification failed',
+        err instanceof Error ? err.stack : String(err),
+      );
       throw new BadRequestException(`Webhook Error: ${err}`);
     }
 
@@ -63,17 +69,23 @@ export class StripeController {
 
     switch (event.type) {
       case 'payment_intent.succeeded':
+        this.logger.log(`Processing successful payment: ${paymentIntent.id}`);
+
         await this.orderService.markOrderPaid(paymentIntent.id);
         break;
 
       case 'payment_intent.payment_failed':
+        this.logger.warn(`Processing failed payment: ${paymentIntent.id}`);
         await this.orderService.markOrderFailed(paymentIntent.id);
         break;
 
       case 'payment_intent.canceled':
+        this.logger.warn(`Processing cancelled payment: ${paymentIntent.id}`);
         await this.orderService.markOrderFailed(paymentIntent.id);
         break;
     }
+
+    this.logger.log(`Finished processing webhook: ${event.type}`);
 
     return { received: true };
   }

@@ -52,3 +52,5 @@ Runs at http://localhost:5173. Enable CORS with credentials on the backend:
   If a DTO changes, update the matching entry in `src/data/routes.ts`.
 - Role checks (`customer`/`seller`) mirror your `@Roles()` decorators, and
   match your JWT's lowercase role values.
+
+
